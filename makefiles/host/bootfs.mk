@@ -28,7 +28,7 @@ $(LINUX_SOURCE): $(LINUX_PATCHES)
 	rm -rf $@
 	git clone --branch $(LINUX_VERSION) --depth 1 https://git.kernel.org/pub/scm/linux/kernel/git/stable/linux.git $@
 
-	./makefiles/host/patch_wrapper.sh $@ $(LINUX_PATCHES) 
+	./makefiles/host/patch_wrapper.sh $@ $(LINUX_PATCHES)
 	# remove + at end of kernel version (indicates dirty tree)
 	touch $@/.scmversion
 
@@ -51,18 +51,18 @@ $(LINUX_SOURCE)/arch/arm/boot/zImage: boot/kernel.config $(LINUX_SOURCE)
 # u-boot
 U_BOOT_MAKE = $(MAKE) -C $(UBOOT_SOURCE) CROSS_COMPILE=$(CROSS) ARCH=$(ARCH)
 U_BOOT_PATCHES = $(wildcard patches/u-boot/*.patch)
-$(UBOOT_SOURCE): $(U_BOOT_PATCHES)
+$(UBOOT_SOURCE)/.config: $(U_BOOT_PATCHES)
 	@mkdir -p $(@D)
-	rm -rf $@
-	git clone --branch $(UBOOT_VERSION) --depth 1 git://www.denx.de/git/u-boot.git $@
+	rm -rf $(@D)
+	git clone --branch $(UBOOT_VERSION) --depth 1 git://www.denx.de/git/u-boot.git $(@D)
 
-	./makefiles/host/patch_wrapper.sh $@ $(U_BOOT_PATCHES) 
+	./makefiles/host/patch_wrapper.sh $(@D) $(U_BOOT_PATCHES)
 	# remove -dirty from version
-	touch $@/.scmversion
+	touch $(@D)/.scmversion
 
-$(UBOOT_SOURCE)/.config: $(UBOOT_SOURCE)
 	# configure u-boot
 	+$(U_BOOT_MAKE) $(U_BOOT_DEFCONFIG)
+	touch $@
 
 $(UBOOT_SOURCE)/u-boot.img: $(UBOOT_SOURCE)/.config
 	+$(U_BOOT_MAKE) u-boot.img
